@@ -1,18 +1,22 @@
 <?php
 require_once 'connection.php';
-function getPublishers(): array
+require_once __DIR__.'/vendor/autoload.php';
+function getPublishers()//: array
 {
     try {
 
-        $con = getConnection();
+         $con = new MongoDB\Client();
+        $col = $con->biblioteca->editorial;
+        return $col->find([], ["sort" => ["name" => 1]]); //->toArray()
 
-        $stmt = $con->prepare("SELECT * FROM publishers ORDER BY publisher_id");
 
-        $stmt->execute();
+        // $stmt = $con->prepare("SELECT * FROM publishers ORDER BY publisher_id");
 
-        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        // $stmt->execute();
 
-        return $result;
+        // $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // return $result;
     }
     finally{
         $con = null;
@@ -20,12 +24,12 @@ function getPublishers(): array
     }
 }
 
-function showPublishers(array $data){
+function showPublishers( $data){
     if($data){
         echo "<table class='table'><tr><th>Id</th> <th> Nombre </th> </tr> <tbody>";
 
         foreach ($data as $fila) {
-            echo "<tr> <td> {$fila["publisher_id"]}</td> <td>{$fila["name"]} </td></tr>";
+            echo "<tr> <td> {$fila["_id"]}</td> <td>{$fila["name"]} </td></tr>";
         }
         echo "</tbody></table>";
     }
@@ -44,23 +48,22 @@ function showMsg(string $msg, string $claseCSS)
 
 function insertPublisher(string $nombre): bool|string{
     try {
-        $con = getConnection();
-        $con->beginTransaction();
-        $stmt = $con->prepare("INSERT INTO publishers(name) VALUES (?)");
-        $stmt->bindParam(1, $nombre);
-        $stmt->execute();
-        $id = $con->lastInsertId();
-        $con->commit();
-        return $id;
-    } catch (PDOException $e) {
-        $con->rollBack();
+        $con = new MongoDB\Client();
+        $col = $con->biblioteca->editorial;
+       $result= $col->insertOne(["name" => $nombre]);
+       return $result->getInsertedId();
+        // $con->beginTransaction();
+        // $stmt = $con->prepare("INSERT INTO publishers(name) VALUES (?)");
+        // $stmt->bindParam(1, $nombre);
+        // $stmt->execute();
+        // $id = $con->lastInsertId();
+        // $con->commit();
+       // return $id;
+    } catch (Exception $e) {
+       // $con->rollBack();
         error_log("Ha ocurrido una excepción insertando en publishers: ". $e->getMessage());
         throw $e;
     }
-    finally{
-        $con = null;
-        $stmt = null;
-
-    }
+    
 
 }

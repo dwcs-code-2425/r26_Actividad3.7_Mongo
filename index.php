@@ -15,6 +15,7 @@
         <a href="add_editor.php">Crear editorial</a>
 
         <?php
+        //phpinfo();
         require_once 'util.php';
         try {
             $data = getPublishers();
